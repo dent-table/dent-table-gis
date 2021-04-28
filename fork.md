@@ -45,3 +45,13 @@ With IDE:
 1. Fetch updates from upstream (and origin) `Git` -> `Fetch`
 2. Merge upstream main into local main: `Git` -> `Branches` -> `upstream/master` -> `Merge into Current`
 3. Push new commits to origin: `Git` -> `Push...` 
+
+### Push an update to `original-repo`
+1. Create a changelist with all the changes to push
+2. Commit changes
+3. Push changes **to a new branch** on upstream
+    - `Git` -> `Push`
+    - Change the destination from `upstream:master` to `upstream:<NEW_BRANCH_NAME>`
+    - Confirm the step above by checking there is a little badge `New` next to the new branch name
+    - Click `Push`
+4. On github.com you should see the new branch and made a pull request

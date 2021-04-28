@@ -15,6 +15,7 @@
     "ROW_DIALOG": {
       "SUBMIT_ERROR": "Impossibile completare l'operazione",
       "REQUIRED_FIELD": "Campo obbligatorio",
+      "INVALID_ID": "ID non valido",
       "COLORS": {
         "red": "Rosso",
         "pink": "Rosa",
@@ -59,6 +60,7 @@
       "date": "Data",
       "date_out":  "Data consegna",
       "verified": "Verificato",
+      "validated_by": "Validato",
       "text_color": "Colore"
     }
   },

@@ -9,15 +9,15 @@ let _ = require('lodash');
 
 const appPath = remote.app.getPath('userData');
 const logPath = appPath + path.sep + 'logs';
-const dbPath = appPath + path.sep + 'data' + path.sep + 'database.db';
+const dbPath = appPath + path.sep + 'data' + path.sep + 'database-gis.db';
 const dbExists = fs.existsSync(dbPath);
 
 // Note: all special cases should always start from 9000
 const specialCases = {
-  'CEREC': {
-    tables: [1],
-    bounds: [9000, 9099]
-  }
+  // 'CEREC': {
+  //   tables: [1],
+  //   bounds: [9000, 9099]
+  // }
 };
 
 const specialCasesKeys = _.keys(specialCases);
@@ -54,6 +54,10 @@ const material_colors = [
   {name: 'deep_orange', value: '#f4511e'}
 ];
 
+const validation_users = [
+  {id: 1234, name: "Vincenzo"},
+];
+
 logger.info('Database initialization...');
 
 const algorithm = 'aes-192-cbc';
@@ -75,13 +79,19 @@ function encrypt(msg) {
 
 function createDatabase() {
   let createStatements = [
+    db.prepare("CREATE TABLE validation_users (" +
+      "validation_userid INTEGER PRIMARY KEY," +
+      "validation_name TEXT NOT NULL" +
+      ")"),
     db.prepare("CREATE TABLE to_do ( " +
       "id INTEGER PRIMARY KEY AUTOINCREMENT," +
       "name TEXT," +
       "type TEXT," +
       "note TEXT," +
       "date INTEGER NOT NULL DEFAULT 0," +
-      "text_color TEXT" +
+      "text_color TEXT," +
+      "validated_by INTEGER," +
+      "FOREIGN KEY (validated_by) REFERENCES validation_users (validation_userid)" +
       ")"),
     db.prepare("CREATE TABLE to_deliver (" +
       "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -90,7 +100,9 @@ function createDatabase() {
       "note TEXT," +
       "date INTEGER NOT NULL DEFAULT 0," +
       "verified INTEGER(1) DEFAULT 0," +
-      "text_color TEXT" +
+      "text_color TEXT," +
+      "validated_by INTEGER," +
+      "FOREIGN KEY (validated_by) REFERENCES validation_users (validation_userid)" +
       ")"),
     db.prepare("CREATE TABLE outgoing (" +
       "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -99,7 +111,9 @@ function createDatabase() {
       "lab TEXT," +
       "date INTEGER NOT NULL DEFAULT 0," +
       "date_out INTEGER DEFAULT 0," +
-      "text_color TEXT" +
+      "text_color TEXT," +
+      "validated_by INTEGER," +
+      "FOREIGN KEY (validated_by) REFERENCES validation_users (validation_userid)" +
       ")"),
     db.prepare("CREATE TABLE plan_chir (" +
       "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -107,7 +121,9 @@ function createDatabase() {
       "type TEXT," +
       "note TEXT," +
       "date INTEGER NOT NULL DEFAULT 0," +
-      "text_color TEXT" +
+      "text_color TEXT," +
+      "validated_by INTEGER," +
+      "FOREIGN KEY (validated_by) REFERENCES validation_users (validation_userid)" +
       ")"),
     db.prepare("CREATE TABLE plan_orto (" +
       "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -115,7 +131,9 @@ function createDatabase() {
       "type TEXT," +
       "note TEXT," +
       "date INTEGER NOT NULL DEFAULT 0," +
-      "text_color TEXT" +
+      "text_color TEXT," +
+      "validated_by INTEGER," +
+      "FOREIGN KEY (validated_by) REFERENCES validation_users (validation_userid)" +
       ")"),
     db.prepare("CREATE TABLE tables_definition (" +
       "id INTEGER PRIMARY KEY," +
@@ -134,6 +152,9 @@ function createDatabase() {
       "username TEXT NOT NULL UNIQUE," +
       "password TEXT NOT NULL" +
       ")"),
+    db.prepare("CREATE TABLE dbversion (" +
+      "version INTEGER PRIMARY KEY" +
+      ")"),
   ];
 
   let createTransaction = db.transaction(() => {
@@ -150,41 +171,46 @@ function createDatabase() {
     {}, //table index starts form 1
 
     [ //to_do
-      {name: 'name', type: 'string', required: true, displayed: true},
-      {name: 'type', type: 'string', required: false, displayed: true},
-      {name: 'note', type: 'text', required: false, displayed: true},
-      {name: 'date', type: 'date', required: true, displayed: true},
-      {name: 'text_color', type: {type: 'select', options: material_colors}, required: false, displayed: false}
+      {name: 'name', type: {name: 'string', special: false}, required: true, displayed: true},
+      {name: 'type', type: {name: 'string', special: false}, required: false, displayed: true},
+      {name: 'note', type: {name: 'text', special: false}, required: false, displayed: true},
+      {name: 'date', type: {name: 'date', special: false}, required: true, displayed: true},
+      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
+      {name: 'text_color', type: {name: 'select', options: material_colors}, required: false, displayed: false}
     ],
     [ //to_deliver
-      {name: 'name', type: 'string', required: true, displayed: true},
-      {name: 'type', type: 'string', required: false, displayed: true},
-      {name: 'note', type: 'text', required: false, displayed: true},
-      {name: 'date', type: 'date', required: true, displayed: true},
-      {name: 'verified', type: 'boolean', required: false, displayed: true},
-      {name: 'text_color', type: {type: 'select', options: material_colors}, required: false, displayed: false}
+      {name: 'name', type: {name: 'string', special: false}, required: true, displayed: true},
+      {name: 'type', type: {name: 'string', special: false}, required: false, displayed: true},
+      {name: 'note', type: {name: 'text', special: false}, required: false, displayed: true},
+      {name: 'date', type: {name: 'date', special: false}, required: true, displayed: true},
+      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
+      {name: 'verified', type: {name: 'boolean', special: false}, required: false, displayed: true},
+      {name: 'text_color', type: {name: 'select', special: false, options: material_colors}, required: false, displayed: false}
     ],
     [ //outgoing
-      {name: 'name', type: 'string', required: true, displayed: true},
-      {name: 'note', type: 'text', required: false, displayed: true},
-      {name: 'lab', type: 'string', required: false, displayed: true},
-      {name: 'date', type: 'date', required: true, displayed: true},
-      {name: 'date_out', type: 'date', required: false, displayed: true},
-      {name: 'text_color', type: {type: 'select', options: material_colors}, required: false, displayed: false}
+      {name: 'name', type: {name: 'string', special: false}, required: true, displayed: true},
+      {name: 'note', type: {name: 'text', special: false}, required: false, displayed: true},
+      {name: 'lab', type: {name: 'string', special: false}, required: false, displayed: true},
+      {name: 'date', type: {name: 'date', special: false}, required: true, displayed: true},
+      {name: 'date_out', type: {name: 'date', special: false}, required: false, displayed: true},
+      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
+      {name: 'text_color', type: {name: 'select', special: false, options: material_colors}, required: false, displayed: false}
     ], //plan_chir
     [
-      {name: 'name', type: 'string', required: true, displayed: true},
-      {name: 'type', type: 'string', required: false, displayed: true},
-      {name: 'note', type: 'text', required: false, displayed: true},
-      {name: 'date', type: 'date', required: true, displayed: true},
-      {name: 'text_color', type: {type: 'select', options: material_colors}, required: false, displayed: false}
+      {name: 'name', type: {name: 'string', special: false}, required: true, displayed: true},
+      {name: 'type', type: {name: 'string', special: false}, required: false, displayed: true},
+      {name: 'note', type: {name: 'text', special: false}, required: false, displayed: true},
+      {name: 'date', type: {name: 'date', special: false}, required: true, displayed: true},
+      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
+      {name: 'text_color', type: {name: 'select', special: false, options: material_colors}, required: false, displayed: false}
     ],
     [ //plan_orto
-      {name: 'name', type: 'string', required: true, displayed: true},
-      {name: 'type', type: 'string', required: false, displayed: true},
-      {name: 'note', type: 'text', required: false, displayed: true},
-      {name: 'date', type: 'date', required: true, displayed: true},
-      {name: 'text_color', type: {type: 'select', options: material_colors}, required: false, displayed: false}
+      {name: 'name', type: {name: 'string', special: false}, required: true, displayed: true},
+      {name: 'type', type: {name: 'string', special: false}, required: false, displayed: true},
+      {name: 'note', type: {name: 'text', special: false}, required: false, displayed: true},
+      {name: 'date', type: {name: 'date', special: false}, required: true, displayed: true},
+      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
+      {name: 'text_color', type: {name: 'select', special: false, options: material_colors}, required: false, displayed: false}
     ]
   ];
 
@@ -211,7 +237,7 @@ function createDatabase() {
     }
 
     logger.info('Populating validation_users table...');
-    let validationUserPopulateStatement = db.prepare("INSERT INTO validation_users(id, name) values(?, ?)");
+    let validationUserPopulateStatement = db.prepare("INSERT INTO validation_users(validation_userid, validation_name) values(?, ?)");
     for (let user of validation_users) {
       validationUserPopulateStatement.run(user.id, user.name);
     }
@@ -219,6 +245,10 @@ function createDatabase() {
     logger.info('Creating user...');
     let defaultUserInsertStatement = db.prepare("INSERT INTO users(username, password) VALUES (?,?)");
     defaultUserInsertStatement.run('carbone', '9f409e3a8ffdadf787dc034b83bddda3');
+
+    logger.info("Populating dbversion...");
+    let dbVersionStatement = db.prepare("INSERT INTO dbversion(version) VALUES(1)");
+    dbVersionStatement.run();
 
     //TODO: remove this
     let queries = [db.prepare("insert into to_do(name, type, date) values ('Nome1', 'Tipo1', 123456), ('Nome2', 'Tipo2', 123456), ('Nome3', 'Tipo3', 123456), ('Nome4', 'Tipo4', 123456), ('Nome5', 'Tipo5', 123456)"),
@@ -252,12 +282,13 @@ function updateDatabase() {
 
     logger.info("Updating table to_do definition...");
     let definition = [ //to_do
-      {name: 'name', type: 'string', required: true, displayed: true},
-      {name: 'type', type: 'string', required: false, displayed: true},
-      {name: 'note', type: 'text', required: false, displayed: true},
-      {name: 'date', type: 'date', required: true, displayed: true},
-      {name: 'verified', type: 'boolean', required: false, displayed: true},
-      {name: 'text_color', type: {type: 'select', options: material_colors}, required: false, displayed: false}
+      {name: 'name', type: {name: 'string', special: false}, required: true, displayed: true},
+      {name: 'type', type: {name: 'string', special: false}, required: false, displayed: true},
+      {name: 'note', type: {name: 'text', special: false}, required: false, displayed: true},
+      {name: 'date', type: {name: 'date', special: false}, required: true, displayed: true},
+      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
+      {name: 'verified', type: {name: 'boolean', special: false}, required: false, displayed: true},
+      {name: 'text_color', type: {name: 'select', special: false, options: material_colors}, required: false, displayed: false}
     ];
     queryString = "UPDATE tables_definition SET columns_def=? WHERE id=1"; // to_do table id = 1
     stmt = db.prepare(queryString);
@@ -267,50 +298,38 @@ function updateDatabase() {
     }
     logger.info("Success");
 
-    logger.info("Creating dbversion...");
-    queryString = "CREATE TABLE dbversion (version INTEGER PRIMARY KEY)";
+    logger.info("Updating db version");
+    queryString = "UPDATE dbversion SET version=2 WHERE version=1";
     stmt = db.prepare(queryString);
     result = stmt.run();
-    // if (result.changes !== 1) {
-    //   throw Error("Error on create table table");
-    // }
-    queryString = "INSERT INTO dbversion(version) VALUES(2)";
-    stmt = db.prepare(queryString);
-    result = stmt.run();
-    if (result.changes !== 1) {
-      throw Error("Error on insert into table");
-    }
+
     logger.info("Success");
   });
 
-  let queryString = "SELECT name FROM sqlite_master WHERE type='table'";
-  let statement = db.prepare(queryString);
-  let tables = statement.all();
-  let containsDbversion = _.find(tables, ['name', 'dbversion']);
-  if(_.isNil(containsDbversion)) {
-    logger.info("Database version 1. Needed update to v2...");
-    v2();
-  }
+  let version;
+  do {
+    let queryString = "SELECT version FROM dbversion";
+    version = db.prepare(queryString)
+      .get()
+      .version;
 
-  queryString = "SELECT version FROM dbversion";
-  let version = db.prepare(queryString)
-    .get()
-    .version;
-
-  while (version !== 2) {
-    if (version === 2) {
+    if (version === 1) {
+      logger.info("Updating database to v2...");
+      v2();
+    } else if (version === 2) {
       // logger.info("Update completed!");
-      // TODO: change this if when version will be greater than 2 (call v3 update transaction)
+      // TODO: change this else-if case when version will be greater than 2 (call v3 update transaction)
     } else {
       logger.warn(`Database version ${version} not recognized`);
       break;
     }
-
-    queryString = "SELECT version FROM dbversion";
-    version = db.prepare(queryString)
-      .get()
-      .version;
-  }
+  } while (version !== 2);
+  //
+  //   queryString = "SELECT version FROM dbversion";
+  //   version = db.prepare(queryString)
+  //     .get()
+  //     .version;
+  // }
 
   logger.info("Update completed!");
 }
@@ -482,10 +501,19 @@ function getAllFromTable({tableId, limit, orderColumn}) {
   let tableName = getTableDefinition(tableId).name;
   let orderColumnName = _.isNil(orderColumn) ? "date" : orderColumn;
 
-  let queryString = "SELECT * FROM tables_slots ts LEFT JOIN " + tableName + " t ON ts.table_ref = t.id WHERE ts.table_id = ?";
-  queryString = queryString + ` ORDER BY t.${orderColumnName} IS NULL, t.${orderColumnName} ASC` ;
+  // let queryString = "SELECT * FROM tables_slots ts " + // select starts from table_slots table
+  //   "LEFT JOIN " + tableName + " t ON ts.table_ref = t.id " +   // join table_slots ref with corresponding data table rows' id
+  //   "LEFT JOIN validation_users vu ON t.validated_by = vu.validation_userid " + // join special column validated_by values with corresponding foreign validation_users ids
+  //   "WHERE ts.table_id = ? " +   // filter only table_slots of selected tableId
+  //   `ORDER BY t.${orderColumnName} IS NULL, t.${orderColumnName} ASC`   // order result by selected table column
+  let queryString = "SELECT * FROM tables_slots ts " + // select starts from table_slots table
+    `LEFT JOIN ${tableName} t ON ts.table_ref = t.id ` +   // join table_slots ref with corresponding data table rows' id
+    "LEFT JOIN validation_users vu ON t.validated_by = vu.validation_userid " + // join special column validated_by values with corresponding foreign validation_users ids TODO: remove this on dent-table
+    "WHERE ts.table_id = ? " +   // filter only table_slots of selected tableId
+    `ORDER BY t.${orderColumnName} IS NULL, t.${orderColumnName} ASC`   // order result by selected table column
+
   if(limit) {
-    queryString = queryString + " LIMIT " + limit;
+    queryString = queryString + " LIMIT " + limit; // set desired rows limit
   }
 
   let stmt = db.prepare(queryString);
@@ -505,7 +533,7 @@ function getAllFromTable({tableId, limit, orderColumn}) {
  *     </pre>
  * @param tableId REQUIRED. The id of the reference table
  * @param slotNumber OPTIONAL the slot number to retrieve
- * @param refId OPTIONAL the id (in the reference table) of the row to retrieve
+ * @param refId OPTIONAL the id (in the reference data table) of the row to retrieve
  * @returns {*} array with all the rows found into the table
  */
 function getRowFromTable({tableId, slotNumber, refId}) {
@@ -513,7 +541,10 @@ function getRowFromTable({tableId, slotNumber, refId}) {
   checkMutualParameters(slotNumber, refId);
 
   let tableName = getTableDefinition(tableId).name;
-  let queryString = "SELECT * FORM tables_slots ts LEFT JOIN " + tableName + " t ON ts.ref_id=t.id WHERE table_id=?";
+  let queryString = "SELECT * FORM tables_slots ts " +
+    `LEFT JOIN ${tableName} t ON ts.ref_id=t.id ` +
+    "LEFT JOIN validation_users vu ON t.validated_by = vu.validation_userid " + //TODO: remove this on dent-table
+    "WHERE table_id=?";
   if(slotNumber !== undefined) {
     queryString = queryString + " AND slot_number=" + slotNumber;
   }
@@ -524,6 +555,20 @@ function getRowFromTable({tableId, slotNumber, refId}) {
   let stmt = db.prepare(queryString);
 
   return stmt.all();
+}
+
+/**
+ * Search the validation user name, given a validation user id
+ * @param userid An user id from validation_users table
+ * @returns on object like '{validation_name: string}' if an user was found for the given id, false otherwise
+ */
+function getValidationUserName(userid) {
+  checkRequiredParameters(userid);
+
+  let stmt = db.prepare("SELECT validation_name FROM validation_users WHERE validation_userid=?");
+  let res = stmt.get(userid);
+
+  return res === undefined ? false : res;
 }
 
 /**
@@ -976,6 +1021,8 @@ ipc.on('database-op', (event, values) => {
         }
         break;
       }
+      case 'validation-get-user-name':
+        result = getValidationUserName(parameters.userid); break;
     }
 
     console.log(result);
@@ -1002,7 +1049,7 @@ ipc.on('shutdown', (event) => {
 logger.info('Database initialization completed');
 
 
-// *** After inizialization operations ***
+// *** After initialization operations ***
 
 function addSlotsFromFile() {
   logger.info("Check for a 'add_slots.json' file");
