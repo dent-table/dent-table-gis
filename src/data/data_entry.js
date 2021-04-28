@@ -54,6 +54,10 @@ const material_colors = [
   {name: 'deep_orange', value: '#f4511e'}
 ];
 
+const validation_users = [
+  {id: 1234, name: "Vincenzo"},
+];
+
 logger.info('Database initialization...');
 
 const algorithm = 'aes-192-cbc';
@@ -75,13 +79,19 @@ function encrypt(msg) {
 
 function createDatabase() {
   let createStatements = [
+    db.prepare("CREATE TABLE validation_users (" +
+      "validation_userid INTEGER PRIMARY KEY," +
+      "validation_name TEXT NOT NULL" +
+      ")"),
     db.prepare("CREATE TABLE to_do ( " +
       "id INTEGER PRIMARY KEY AUTOINCREMENT," +
       "name TEXT," +
       "type TEXT," +
       "note TEXT," +
       "date INTEGER NOT NULL DEFAULT 0," +
-      "text_color TEXT" +
+      "text_color TEXT," +
+      "validated_by INTEGER," +
+      "FOREIGN KEY (validated_by) REFERENCES validation_users (validation_userid)" +
       ")"),
     db.prepare("CREATE TABLE to_deliver (" +
       "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -90,7 +100,9 @@ function createDatabase() {
       "note TEXT," +
       "date INTEGER NOT NULL DEFAULT 0," +
       "verified INTEGER(1) DEFAULT 0," +
-      "text_color TEXT" +
+      "text_color TEXT," +
+      "validated_by INTEGER," +
+      "FOREIGN KEY (validated_by) REFERENCES validation_users (validation_userid)" +
       ")"),
     db.prepare("CREATE TABLE outgoing (" +
       "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -99,7 +111,9 @@ function createDatabase() {
       "lab TEXT," +
       "date INTEGER NOT NULL DEFAULT 0," +
       "date_out INTEGER DEFAULT 0," +
-      "text_color TEXT" +
+      "text_color TEXT," +
+      "validated_by INTEGER," +
+      "FOREIGN KEY (validated_by) REFERENCES validation_users (validation_userid)" +
       ")"),
     db.prepare("CREATE TABLE plan_chir (" +
       "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -107,7 +121,9 @@ function createDatabase() {
       "type TEXT," +
       "note TEXT," +
       "date INTEGER NOT NULL DEFAULT 0," +
-      "text_color TEXT" +
+      "text_color TEXT," +
+      "validated_by INTEGER," +
+      "FOREIGN KEY (validated_by) REFERENCES validation_users (validation_userid)" +
       ")"),
     db.prepare("CREATE TABLE plan_orto (" +
       "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -115,7 +131,9 @@ function createDatabase() {
       "type TEXT," +
       "note TEXT," +
       "date INTEGER NOT NULL DEFAULT 0," +
-      "text_color TEXT" +
+      "text_color TEXT," +
+      "validated_by INTEGER," +
+      "FOREIGN KEY (validated_by) REFERENCES validation_users (validation_userid)" +
       ")"),
     db.prepare("CREATE TABLE tables_definition (" +
       "id INTEGER PRIMARY KEY," +
@@ -134,6 +152,9 @@ function createDatabase() {
       "username TEXT NOT NULL UNIQUE," +
       "password TEXT NOT NULL" +
       ")"),
+    db.prepare("CREATE TABLE dbversion (" +
+      "version INTEGER PRIMARY KEY" +
+      ")"),
   ];
 
   let createTransaction = db.transaction(() => {
@@ -150,45 +171,45 @@ function createDatabase() {
     {}, //table index starts form 1
 
     [ //to_do
-      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
       {name: 'name', type: {name: 'string', special: false}, required: true, displayed: true},
       {name: 'type', type: {name: 'string', special: false}, required: false, displayed: true},
       {name: 'note', type: {name: 'text', special: false}, required: false, displayed: true},
       {name: 'date', type: {name: 'date', special: false}, required: true, displayed: true},
+      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
       {name: 'text_color', type: {name: 'select', options: material_colors}, required: false, displayed: false}
     ],
     [ //to_deliver
-      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
       {name: 'name', type: {name: 'string', special: false}, required: true, displayed: true},
       {name: 'type', type: {name: 'string', special: false}, required: false, displayed: true},
       {name: 'note', type: {name: 'text', special: false}, required: false, displayed: true},
       {name: 'date', type: {name: 'date', special: false}, required: true, displayed: true},
+      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
       {name: 'verified', type: {name: 'boolean', special: false}, required: false, displayed: true},
       {name: 'text_color', type: {name: 'select', special: false, options: material_colors}, required: false, displayed: false}
     ],
     [ //outgoing
-      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
       {name: 'name', type: {name: 'string', special: false}, required: true, displayed: true},
       {name: 'note', type: {name: 'text', special: false}, required: false, displayed: true},
       {name: 'lab', type: {name: 'string', special: false}, required: false, displayed: true},
       {name: 'date', type: {name: 'date', special: false}, required: true, displayed: true},
       {name: 'date_out', type: {name: 'date', special: false}, required: false, displayed: true},
+      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
       {name: 'text_color', type: {name: 'select', special: false, options: material_colors}, required: false, displayed: false}
     ], //plan_chir
     [
-      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
       {name: 'name', type: {name: 'string', special: false}, required: true, displayed: true},
       {name: 'type', type: {name: 'string', special: false}, required: false, displayed: true},
       {name: 'note', type: {name: 'text', special: false}, required: false, displayed: true},
       {name: 'date', type: {name: 'date', special: false}, required: true, displayed: true},
+      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
       {name: 'text_color', type: {name: 'select', special: false, options: material_colors}, required: false, displayed: false}
     ],
     [ //plan_orto
-      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
       {name: 'name', type: {name: 'string', special: false}, required: true, displayed: true},
       {name: 'type', type: {name: 'string', special: false}, required: false, displayed: true},
       {name: 'note', type: {name: 'text', special: false}, required: false, displayed: true},
       {name: 'date', type: {name: 'date', special: false}, required: true, displayed: true},
+      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
       {name: 'text_color', type: {name: 'select', special: false, options: material_colors}, required: false, displayed: false}
     ]
   ];
@@ -216,7 +237,7 @@ function createDatabase() {
     }
 
     logger.info('Populating validation_users table...');
-    let validationUserPopulateStatement = db.prepare("INSERT INTO validation_users(id, name) values(?, ?)");
+    let validationUserPopulateStatement = db.prepare("INSERT INTO validation_users(validation_userid, validation_name) values(?, ?)");
     for (let user of validation_users) {
       validationUserPopulateStatement.run(user.id, user.name);
     }
@@ -224,6 +245,10 @@ function createDatabase() {
     logger.info('Creating user...');
     let defaultUserInsertStatement = db.prepare("INSERT INTO users(username, password) VALUES (?,?)");
     defaultUserInsertStatement.run('carbone', '9f409e3a8ffdadf787dc034b83bddda3');
+
+    logger.info("Populating dbversion...");
+    let dbVersionStatement = db.prepare("INSERT INTO dbversion(version) VALUES(1)");
+    dbVersionStatement.run();
 
     //TODO: remove this
     let queries = [db.prepare("insert into to_do(name, type, date) values ('Nome1', 'Tipo1', 123456), ('Nome2', 'Tipo2', 123456), ('Nome3', 'Tipo3', 123456), ('Nome4', 'Tipo4', 123456), ('Nome5', 'Tipo5', 123456)"),
@@ -257,11 +282,11 @@ function updateDatabase() {
 
     logger.info("Updating table to_do definition...");
     let definition = [ //to_do
-      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
       {name: 'name', type: {name: 'string', special: false}, required: true, displayed: true},
       {name: 'type', type: {name: 'string', special: false}, required: false, displayed: true},
       {name: 'note', type: {name: 'text', special: false}, required: false, displayed: true},
       {name: 'date', type: {name: 'date', special: false}, required: true, displayed: true},
+      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
       {name: 'verified', type: {name: 'boolean', special: false}, required: false, displayed: true},
       {name: 'text_color', type: {name: 'select', special: false, options: material_colors}, required: false, displayed: false}
     ];
@@ -273,19 +298,11 @@ function updateDatabase() {
     }
     logger.info("Success");
 
-    logger.info("Creating dbversion...");
-    queryString = "CREATE TABLE dbversion (version INTEGER PRIMARY KEY)";
+    logger.info("Updating db version");
+    queryString = "UPDATE dbversion SET version=2 WHERE version=1";
     stmt = db.prepare(queryString);
     result = stmt.run();
-    // if (result.changes !== 1) {
-    //   throw Error("Error on create table table");
-    // }
-    queryString = "INSERT INTO dbversion(version) VALUES(2)";
-    stmt = db.prepare(queryString);
-    result = stmt.run();
-    if (result.changes !== 1) {
-      throw Error("Error on insert into table");
-    }
+
     logger.info("Success");
   });
 
@@ -538,6 +555,20 @@ function getRowFromTable({tableId, slotNumber, refId}) {
   let stmt = db.prepare(queryString);
 
   return stmt.all();
+}
+
+/**
+ * Search the validation user name, given a validation user id
+ * @param userid An user id from validation_users table
+ * @returns on object like '{validation_name: string}' if an user was found for the given id, false otherwise
+ */
+function getValidationUserName(userid) {
+  checkRequiredParameters(userid);
+
+  let stmt = db.prepare("SELECT validation_name FROM validation_users WHERE validation_userid=?");
+  let res = stmt.get(userid);
+
+  return res === undefined ? false : res;
 }
 
 /**
@@ -990,6 +1021,8 @@ ipc.on('database-op', (event, values) => {
         }
         break;
       }
+      case 'validation-get-user-name':
+        result = getValidationUserName(parameters.userid); break;
     }
 
     console.log(result);
