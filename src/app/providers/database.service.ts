@@ -217,10 +217,32 @@ export class DatabaseService {
     });
   }
 
+  getValidationUserName(validation_userid: number): Observable<string> {
+    const params = {userid: validation_userid};
+
+    return new Observable<string>((subscriber => {
+      this.sendToDatabase('validation-get-user-name', params);
+      this.electronService.ipcOnce('validation-get-user-name', (event, data) => {
+        if (data.result == 'error') {
+          subscriber.error(data.message);
+        } else {
+          subscriber.next(data.response.validation_name);
+          subscriber.complete();
+        }
+      });
+    }))
+  }
+
   moveRow(fromTableId: number, slotNumber: number, toTableId: number): Observable<any> {
     const params = {fromTableId: fromTableId, slotNumber: slotNumber, toTableId: toTableId};
 
     return new Observable((subscriber) => {
+      // if starting table and target table are same we there's nothing to do
+      if (fromTableId === toTableId) {
+        subscriber.complete();
+        return;
+      }
+
       this.sendToDatabase('move-row', params);
       this.electronService.ipcOnce('move-row', (event, data) => {
         if (data.result === 'error') {
