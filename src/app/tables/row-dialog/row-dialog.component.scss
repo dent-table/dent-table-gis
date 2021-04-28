@@ -3,9 +3,11 @@ form{
   height: 100%;
 }
 
-.dialog-content {
-  max-height: 92%;
-}
+//.dialog-content {
+//  max-height: calc(100% - 52px);
+//  overflow: hidden;
+//}
+
 .mat-form-field {
   width: 100%;
 }

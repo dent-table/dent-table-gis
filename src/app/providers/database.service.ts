@@ -217,6 +217,22 @@ export class DatabaseService {
     });
   }
 
+  getValidationUserName(validation_userid: number): Observable<string> {
+    const params = {userid: validation_userid};
+
+    return new Observable<string>((subscriber => {
+      this.sendToDatabase('validation-get-user-name', params);
+      this.electronService.ipcOnce('validation-get-user-name', (event, data) => {
+        if (data.result == 'error') {
+          subscriber.error(data.message);
+        } else {
+          subscriber.next(data.response.validation_name);
+          subscriber.complete();
+        }
+      });
+    }))
+  }
+
   moveRow(fromTableId: number, slotNumber: number, toTableId: number): Observable<any> {
     const params = {fromTableId: fromTableId, slotNumber: slotNumber, toTableId: toTableId};
 
