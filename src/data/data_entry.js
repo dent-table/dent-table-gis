@@ -318,12 +318,12 @@ function updateDatabase() {
       v2();
     } else if (version === 2) {
       // logger.info("Update completed!");
-      // TODO: change this else-if case when version will be greater than 2 (call v3 update transaction)
+      // TODO: change this else-if case when version will be greater than 2 (call v3 update transaction in this row)
     } else {
       logger.warn(`Database version ${version} not recognized`);
       break;
     }
-  } while (version !== 2);
+  } while (version !== 2); // TODO: change also this row when version will be greater than 3 (increase 3 to 4)
   //
   //   queryString = "SELECT version FROM dbversion";
   //   version = db.prepare(queryString)

@@ -164,7 +164,7 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
       // special columns needs something else
-      if (column.type.special) { //TODO: add this to dent-table
+      if (column.type.special) {
         if (column.name === 'validated_by') {
           // validated_by field needs that the inserted id exists into database
           asyncValidators.push(this.validationUserAsyncValidator());
@@ -174,7 +174,7 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
       // group[column.name] = new FormControl(currentValue || '',
       //   {validators: validators, asyncValidators: asyncValidators, updateOn: "change"});
 
-      disablingControls[column.name] = this.fb.control(currentValue || '', //TODO: add this to dent-table
+      disablingControls[column.name] = this.fb.control(currentValue || '',
         {validators: validators, asyncValidators: asyncValidators, updateOn: "change"});
     }
 
@@ -184,7 +184,7 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.statusChangeObservable = validatedByControl.statusChanges.subscribe(status => this.enableFormIfValid(status));
 
-    this.formGroup = this.fb.group({ //TODO: add this to dent-table
+    this.formGroup = this.fb.group({
       validated_by: validatedByControl,
       disablingControls: this.fb.group(disablingControls)
     });
