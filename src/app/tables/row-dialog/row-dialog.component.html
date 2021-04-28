@@ -1,5 +1,21 @@
 <form *ngIf="formGroup" (ngSubmit)="onSubmit()" [formGroup]="formGroup">
-  <div class="dialog-content" mat-dialog-content>
+  <div class="sticky">
+    <div class="input-row">
+      <mat-form-field class="small-field mat-small" appearance="outline">
+        <mat-label>{{ 'TABLES.COLUMNS.validated_by'| translate }}</mat-label>
+        <input [errorStateMatcher]="dirtyMatcher" [tabindex]="0" type="text" minlength="4" maxlength="4" matInput
+               formControlName="validated_by" id="validated_by">
+        <mat-error *ngIf="formGroup.get(['validated_by']).errors?.id_exists === false">
+          {{ 'PAGES.ROW_DIALOG.INVALID_ID' | translate }}
+        </mat-error>
+      </mat-form-field>
+      <div class="inline-field">
+        <span *ngIf="currentValidationUser" class="mat-body">{{currentValidationUser}}</span>
+        <mat-spinner diameter="30" *ngIf="searchUserPending"></mat-spinner>
+      </div>
+    </div>
+  </div>
+  <div class="dialog-content" mat-dialog-content formGroupName="disablingControls">
     <div class="input-row">
       <mat-form-field appearance="outline">
         <mat-label>{{'TABLES.COLUMNS.slot_number' | translate}}</mat-label>
