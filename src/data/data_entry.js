@@ -229,7 +229,7 @@ function createDatabase() {
       {name: 'note', type: {name: 'text', special: false}, required: false, displayed: true},
       {name: 'lab', type: {name: 'string', special: false}, required: false, displayed: true},
       {name: 'date', type: {name: 'date', special: false}, required: true, displayed: true},
-      {name: 'date_out', type: {name: 'date', special: false}, required: false, displayed: true},
+      {name: 'date_out', type: {name: 'date', special: false}, required: false, displayed: true, map: {all: {to: 'date'}}},
       {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
       {name: 'text_color', type: {name: 'select', special: false, options: material_colors}, required: false, displayed: false}
     ], //plan_chir
@@ -497,8 +497,9 @@ function login(user, cryptoPass) {
 /**
  * Return the table's name and its columns definition from given id
  * @param tableId
- * @returns {{}|*} If tableId is defined, the table's info given its id, otherwise an object with id infos of all the
- * tables.
+ * @returns {{id: number, name: string, columns_def: string}|*} If <i>tableId</i> is defined, returns the table's
+ * info given its id, otherwise returns an object with id infos of all the tables.
+ * **NB**: <i>columns_def</i> is the string representation of columns def object
  */
 function getTableDefinition(tableId) {
   logger.debug(logObject('getTableDefinition', 'Requested definition of table ' + tableId));
@@ -963,12 +964,32 @@ function updateRow({tableId, rowId, values}) {
  */
 function moveRow({fromTableId, slotNumber, toTableId}) {
   checkRequiredParameters(fromTableId, slotNumber, toTableId);
+  let sourceTableColumnsDefinition = getTableDefinition(fromTableId).columns_def;
+
+  // in this object we save the mapping between source columns and target columns:
+  // for each column in target table (as keys), we save the source column we map to it
+  // this can be useful in case of error to obtain the mapping we have made
+  let targetMapping = {};
 
   let deletedValues = deleteFromTable({tableId: fromTableId, slotNumber: slotNumber});
   logger.debug(logObject('moveRow', 'Values to move: ',  deletedValues));
 
-  if (fromTableId === 3) { // in table outgoing we the date to move is date_out field
-    deletedValues['date'] = deletedValues['date_out'];
+  logger.debug(logObject('moveRow', sourceTableColumnsDefinition) );
+
+  for (let sourceColumn of sourceTableColumnsDefinition) {
+    // if column definition has mapping info for the target table (or for all tables) we have to map the source column
+    // into the target column
+    if (sourceColumn.map && (sourceColumn.map[toTableId] || sourceColumn.map['all'])) {
+      // the mapping infos are stored with key 'all' if mapping applies to any table,
+      // otherwise, the mapping infos are stored with the key of the target table if applies only to a specific target table
+      const targetColumn = sourceColumn.map['all'] ? sourceColumn.map['all'].to : sourceColumn.map[toTableId].to;
+      deletedValues[targetColumn] = deletedValues[sourceColumn.name];
+      targetMapping[targetColumn] = sourceColumn.name;
+    } else {
+      // if there aren't any mapping info, we have no operation to do (in deletedValues, the source column is already mapped
+      // to the correct target column), so just need to save this mapping information
+      targetMapping[sourceColumn.name] = sourceColumn.name;
+    }
   }
 
   return insertIntoTable({tableId: toTableId, values: deletedValues})
