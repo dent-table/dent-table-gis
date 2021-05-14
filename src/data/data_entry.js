@@ -214,6 +214,7 @@ function createDatabase() {
       {name: 'date', type: {name: 'date', special: false}, required: true, displayed: true},
       {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
       {name: 'text_color', type: {name: 'select', options: material_colors}, required: false, displayed: false}
+      {name: 'verified', type: {name: 'boolean', special: false}, required: false, displayed: true},
     ],
     [ //to_deliver
       {name: 'name', type: {name: 'string', special: false}, required: true, displayed: true},
@@ -1155,7 +1156,7 @@ function addSlotsFromFile() {
           logger.warn(logObject('addSlotsFromFile', `An error occurred during deletion of 'add_slots.json'
           file (${addSlotsFilePath}). File will be renamed in 'delete_me.old`));
           fs.rename(addSlotsFilePath, path.join(appPath, 'data', 'delete_me.old'), (err1 => {
-            logger.warn(logObject('addSlotsFromFile', `An error occurred during rename of 'add_slots.json' file (${addSlotsFilePath}).
+            logger.alert(logObject('addSlotsFromFile', `An error occurred during rename of 'add_slots.json' file (${addSlotsFilePath}).
             YOU SHOULD MANUALLY REMOVE THE FILE IMMEDIATELY!`));
           }));
         }
