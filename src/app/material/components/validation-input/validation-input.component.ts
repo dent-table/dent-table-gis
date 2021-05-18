@@ -31,13 +31,14 @@ import {ShowOnDirtyErrorStateMatcher} from "@angular/material/core";
 @Component({
   selector: 'app-validation-input',
   template: `
-    <div (click)="input.focus()" style="cursor: text;">
+    <div (click)="input.focus()" [ngStyle]="{'cursor': !disabled ? 'text':'default'}"
+         [ngClass]="{'validation-input-disabled': disabled}">
       <div class="inline" style="width: 35%">
         <input #input type="text" [formControl]="control" minlength="0" maxlength="4"
                [attr.aria-labelledby]="parentFormField?.getLabelId()" [id]="id"/>
       </div>
-      <div class="inline flex" style="width: 60%; cursor: text" (click)="focus()">
-        <span *ngIf="validationUserName" class="validation-name">{{validationUserName}}</span>
+      <div class="inline flex" style="width: 60%" (click)="focus()">
+        <span *ngIf="validationUserName" class="validation-name mat-typography">{{validationUserName}}</span>
         <mat-spinner diameter="14" *ngIf="validationPending"></mat-spinner>
       </div>
     </div>
@@ -59,6 +60,10 @@ import {ShowOnDirtyErrorStateMatcher} from "@angular/material/core";
       outline: none;
       font: inherit;
       color: currentColor;
+    }
+
+    .validation-input-disabled {
+      color: rgba(0, 0, 0, 0.26);
     }
   `],
   providers: [{provide: MatFormFieldControl, useExisting: ValidationInputComponent}]
@@ -213,6 +218,8 @@ export class ValidationInputComponent implements MatFormFieldControl<string>, Co
       this.validationObservable = this.ngControl.statusChanges.pipe(switchMap(value => {
         if (value === "VALID" && this.ngControl.dirty) {
           return this.databaseService.getValidationUserName(Number.parseInt(this.value, 10));
+        } else if (value === "DISABLED") {
+          return of(this.validationUserName);
         }
         return of(value);
       })).subscribe( (res) => {

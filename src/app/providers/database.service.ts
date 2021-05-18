@@ -238,8 +238,8 @@ export class DatabaseService {
     const params = {userid: validation_userid};
 
     let obs = new Observable<string>((subscriber => {
-      this.sendToDatabase('validation-get-user-name', params);
-      this.electronService.ipcOnce('validation-get-user-name', (event, data) => {
+      const returnChannel = this.sendToDatabase('validation-get-user-name', params, true);
+      this.electronService.ipcOnce(returnChannel, (event, data) => {
         if (data.result == 'error') {
           subscriber.error(data.message);
         } else {

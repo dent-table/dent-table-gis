@@ -28,3 +28,9 @@ form{
 .input-row {
   padding-bottom: 15px;
 }
+
+// remove yellow border on custom inputs when clicked with mouse
+*:focus {
+  outline: none !important;
+  border: 0 !important;
+}
