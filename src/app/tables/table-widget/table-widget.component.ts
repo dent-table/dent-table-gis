@@ -91,7 +91,7 @@ export class TableWidgetComponent implements OnInit, AfterViewInit, AfterContent
       // https://en.wikipedia.org/wiki/List_of_Unicode_characters
       let dataString = (data as {[key: string]: any})[key];
 
-      if (key.indexOf('date') != -1) {
+      if (key === 'date' || key.indexOf('date_') != -1) {
         dataString = formatDate(dataString, 'dd/MM', this.locale);
       }
 

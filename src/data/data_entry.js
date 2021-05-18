@@ -93,6 +93,7 @@ const material_colors = [
 
 const validation_users = [
   {id: 1234, name: "Vincenzo"},
+  {id: 4321, name: "Vincenzo 2"}
 ];
 
 logger.info(logObject('main', 'Database initialization...'));
@@ -126,9 +127,12 @@ function createDatabase() {
       "type TEXT," +
       "note TEXT," +
       "date INTEGER NOT NULL DEFAULT 0," +
+      "verified INTEGER(1) DEFAULT 0," +
+      "validated_out INTEGER," +
       "text_color TEXT," +
       "validated_by INTEGER," +
       "FOREIGN KEY (validated_by) REFERENCES validation_users (validation_userid)" +
+      "FOREIGN KEY (validated_out) REFERENCES validation_users (validation_userid)" +
       ")"),
     db.prepare("CREATE TABLE to_deliver (" +
       "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -313,7 +317,7 @@ function createDatabase() {
     defaultUserInsertStatement.run('carbone', '9f409e3a8ffdadf787dc034b83bddda3');
 
     logger.info(logObject('createDatabase', "Populating dbversion..."));
-    let dbVersionStatement = db.prepare("INSERT INTO dbversion(version) VALUES(1)");
+    let dbVersionStatement = db.prepare("INSERT INTO dbversion(version) VALUES(2)");
     dbVersionStatement.run();
 
     //TODO: remove this
@@ -617,8 +621,7 @@ function createTableSelectString(tableId, orderColumnName) {
 function getAllFromTable({tableId, limit, orderColumn}) {
   checkRequiredParameters(tableId);
   logger.info(logObject('getAllFromTable', 'Getting rows from table with id ' + tableId + ' (limit ' + limit + ')'));
-  let tableName = getTableDefinition(tableId).name;
-  let orderColumnName = _.isNil(orderColumn) ? "date" : orderColumn;
+  const orderColumnName = _.isNil(orderColumn) ? "date" : orderColumn;
 
 /*
   let queryString = "SELECT * FROM tables_slots ts " + // select starts from table_slots table
@@ -635,7 +638,9 @@ function getAllFromTable({tableId, limit, orderColumn}) {
   }
 
   let stmt = db.prepare(queryString);
-  return stmt.all(tableId);
+  let all = stmt.all(tableId);
+  console.log(all);
+  return all;
 }
 
 /**
