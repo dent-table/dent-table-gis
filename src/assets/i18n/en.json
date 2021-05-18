@@ -65,6 +65,7 @@
       "date_out":  "Data consegna",
       "verified": "Verificato",
       "validated_by": "Validato",
+      "validated_out": "Validato (uscita)",
       "text_color": "Colore"
     }
   },

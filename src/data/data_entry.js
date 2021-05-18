@@ -238,16 +238,17 @@ function createDatabase() {
       {name: 'type', type: {name: 'string', special: false}, required: false, displayed: true},
       {name: 'note', type: {name: 'text', special: false}, required: false, displayed: true},
       {name: 'date', type: {name: 'date', special: false}, required: true, displayed: true},
-      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
-      {name: 'text_color', type: {name: 'select', options: material_colors}, required: false, displayed: false}
+      {name: 'validated_by', type: {name: 'validation', special: true}, required: true, displayed: true},
+      {name: 'validated_out', type: {name: 'validation', special: false}, required: false, displayed: true},
       {name: 'verified', type: {name: 'boolean', special: false}, required: false, displayed: true},
+      {name: 'text_color', type: {name: 'select', options: material_colors}, required: false, displayed: false}
     ],
     [ //to_deliver
       {name: 'name', type: {name: 'string', special: false}, required: true, displayed: true},
       {name: 'type', type: {name: 'string', special: false}, required: false, displayed: true},
       {name: 'note', type: {name: 'text', special: false}, required: false, displayed: true},
       {name: 'date', type: {name: 'date', special: false}, required: true, displayed: true},
-      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
+      {name: 'validated_by', type: {name: 'validation', special: true}, required: true, displayed: true},
       {name: 'verified', type: {name: 'boolean', special: false}, required: false, displayed: true},
       {name: 'text_color', type: {name: 'select', special: false, options: material_colors}, required: false, displayed: false}
     ],
@@ -257,7 +258,7 @@ function createDatabase() {
       {name: 'lab', type: {name: 'string', special: false}, required: false, displayed: true},
       {name: 'date', type: {name: 'date', special: false}, required: true, displayed: true},
       {name: 'date_out', type: {name: 'date', special: false}, required: false, displayed: true, map: {all: {to: 'date'}}},
-      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
+      {name: 'validated_by', type: {name: 'validation', special: true}, required: true, displayed: true},
       {name: 'text_color', type: {name: 'select', special: false, options: material_colors}, required: false, displayed: false}
     ], //plan_chir
     [
@@ -265,7 +266,7 @@ function createDatabase() {
       {name: 'type', type: {name: 'string', special: false}, required: false, displayed: true},
       {name: 'note', type: {name: 'text', special: false}, required: false, displayed: true},
       {name: 'date', type: {name: 'date', special: false}, required: true, displayed: true},
-      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
+      {name: 'validated_by', type: {name: 'validation', special: true}, required: true, displayed: true},
       {name: 'text_color', type: {name: 'select', special: false, options: material_colors}, required: false, displayed: false}
     ],
     [ //plan_orto
@@ -273,7 +274,7 @@ function createDatabase() {
       {name: 'type', type: {name: 'string', special: false}, required: false, displayed: true},
       {name: 'note', type: {name: 'text', special: false}, required: false, displayed: true},
       {name: 'date', type: {name: 'date', special: false}, required: true, displayed: true},
-      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
+      {name: 'validated_by', type: {name: 'validation', special: true}, required: true, displayed: true},
       {name: 'text_color', type: {name: 'select', special: false, options: material_colors}, required: false, displayed: false}
     ]
   ];
@@ -351,7 +352,8 @@ function updateDatabase() {
       {name: 'type', type: {name: 'string', special: false}, required: false, displayed: true},
       {name: 'note', type: {name: 'text', special: false}, required: false, displayed: true},
       {name: 'date', type: {name: 'date', special: false}, required: true, displayed: true},
-      {name: 'validated_by', type: {name: 'number', special: true}, required: true, displayed: true},
+      {name: 'validated_out', type: {name: 'validation', special: false}, required: false, displayed: true},
+      {name: 'validated_by', type: {name: 'validation', special: true}, required: true, displayed: true},
       {name: 'verified', type: {name: 'boolean', special: false}, required: false, displayed: true},
       {name: 'text_color', type: {name: 'select', special: false, options: material_colors}, required: false, displayed: false}
     ];
@@ -562,6 +564,50 @@ function getAvailableSlots(tableId) {
 }
 
 /**
+ * Dynamically create the select query for a given table.
+ * Because of <i>validation</i>s fields, a select query needs an indefinite number of left joins
+ * with the <i>validation_users</i> table. This functions analyze the table definition and create the
+ * required query
+ *
+ * @example
+ * SELECT * FROM tables_slots ts  // select starts from table_slots table
+ * LEFT JOIN ${tableName} t ON ts.table_ref = t.id // join table_slots ref with corresponding data table rows' id
+ * LEFT JOIN validation_users vu ON t.validated_by = vu.validation_userid   // join special column validated_by values with corresponding foreign validation_users ids
+ * LEFT JOIN validation_users vu2 ON t.validated_out = vu2.validation_userid
+ * WHERE ts.table_id = ?   // filter only table_slots of selected tableId
+ * ORDER BY t.${orderColumnName} IS NULL, t.${orderColumnName} ASC
+ * @param tableId
+ * @param orderColumnName
+ * @returns {string}
+ */
+function createTableSelectString(tableId, orderColumnName) {
+  const tableDefinition = getTableDefinition(tableId);
+  const tableName = tableDefinition.name;
+  const columnsDefinition = tableDefinition.columns_def;
+
+  let fields = ['ts.slot_number', 'ts.table_id', 'ts.table_ref'];
+  let joins = [`LEFT JOIN ${tableName} t ON ts.table_ref = t.id`];
+  let i = 0;
+  for (let column of columnsDefinition) {
+    fields.push(`t.${column.name}`);
+
+    if (column.type.name === 'validation') {
+      i = i + 1;
+      fields.push(`vu${i}.validation_name AS ${column.name}_name`);
+      joins.push(`LEFT JOIN validation_users vu${i} ON t.${column.name} = vu${i}.validation_userid`)
+    }
+  }
+
+  const query = `SELECT ${fields.join(', ')} FROM tables_slots ts ` +
+    `${joins.join(' ')} ` +
+    `WHERE ts.table_id = ? ` +
+    `ORDER BY t.${orderColumnName} IS NULL, t.${orderColumnName} ASC`;
+
+  logger.debug(logObject('createTableSelectString', query));
+  return query;
+}
+
+/**
  * Get all (or #limit) rows from the table specified by tableId ordered by date.<br>Each rows have the form defined by {@link getRowFromTable}.
  * @param tableId REQUIRED table's id
  * @param limit number of rows to return
@@ -574,17 +620,16 @@ function getAllFromTable({tableId, limit, orderColumn}) {
   let tableName = getTableDefinition(tableId).name;
   let orderColumnName = _.isNil(orderColumn) ? "date" : orderColumn;
 
-  // let queryString = "SELECT * FROM tables_slots ts " + // select starts from table_slots table
-  //   "LEFT JOIN " + tableName + " t ON ts.table_ref = t.id " +   // join table_slots ref with corresponding data table rows' id
-  //   "LEFT JOIN validation_users vu ON t.validated_by = vu.validation_userid " + // join special column validated_by values with corresponding foreign validation_users ids
-  //   "WHERE ts.table_id = ? " +   // filter only table_slots of selected tableId
-  //   `ORDER BY t.${orderColumnName} IS NULL, t.${orderColumnName} ASC`   // order result by selected table column
+/*
   let queryString = "SELECT * FROM tables_slots ts " + // select starts from table_slots table
     `LEFT JOIN ${tableName} t ON ts.table_ref = t.id ` +   // join table_slots ref with corresponding data table rows' id
     "LEFT JOIN validation_users vu ON t.validated_by = vu.validation_userid " + // join special column validated_by values with corresponding foreign validation_users ids TODO: remove this on dent-table
+    "LEFT JOIN validation_users vu2 ON t.validated_out = vu2.validation_userid " +
     "WHERE ts.table_id = ? " +   // filter only table_slots of selected tableId
     `ORDER BY t.${orderColumnName} IS NULL, t.${orderColumnName} ASC`   // order result by selected table column
+*/
 
+  let queryString = createTableSelectString(tableId, orderColumnName);
   if(limit) {
     queryString = queryString + " LIMIT " + limit; // set desired rows limit
   }

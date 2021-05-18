@@ -41,6 +41,9 @@
               </span>
               <ng-template #defaultDate ><span>{{row[column.name] | date: 'dd/MM' }}</span></ng-template>
             </span>
+              <span *ngSwitchCase="'validation'">
+                {{row[column.name + '_name']}}
+              </span>
               <span *ngSwitchDefault class="cell-text" >{{row[column.name]}}</span>
             </div>
           </mat-cell>
@@ -56,7 +59,7 @@
       <ng-container matColumnDef="validated_by">
         <mat-header-cell *matHeaderCellDef><span class="cell-text">{{ 'TABLES.COLUMNS.validated_by'| translate }}</span></mat-header-cell>
         <mat-cell [ngStyle]="{color: row['text_color']}" *matCellDef="let row" (click)="fireTableCellClicked('validated_by', row)">
-          <span class="cell-text">{{row.validation_name}}</span>
+          <span class="cell-text">{{row.validated_by_name}}</span>
         </mat-cell>
       </ng-container>
 

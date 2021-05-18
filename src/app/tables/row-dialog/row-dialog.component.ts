@@ -49,31 +49,8 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
   dialogType: string;
   specialCases;
 
-  /** Show mat-error when invalid control is dirty, touched, or submitted.
-   * https://stackoverflow.com/questions/51456487/why-mat-error-not-get-displayed-inside-mat-form-field-in-angular-material-6-with
-   */
-  dirtyMatcher = new ShowOnDirtyErrorStateMatcher();
-
   /* caching validation observables subscription */
   statusChangeObservable: Subscription;
-  validationUserNameObservable: Subscription;
-  currentValidationId: number;
-  currentValidationUser: string;
-  searchUserPending: boolean;
-
-
-  validationUserAsyncValidator(): AsyncValidatorFn {
-    return (control: AbstractControl): Observable<ValidationErrors | null> => {
-      return timer(300).pipe(switchMap((index, value) => {
-        return this.databaseService.getValidationUserName(Number.parseInt(control.value, 10)).pipe(
-          map(res => {
-            return res ? null : {id_exists: false};
-          }),
-          tap(() => setTimeout(() => this.cdr.detectChanges(), 0))
-        );
-      }));
-    };
-  }
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: DialogData,
@@ -96,11 +73,6 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit() {
     this.tableDefinition = this.data.tableDefinition;
-
-    if (this.data.element.validation_name) {
-      this.currentValidationUser = this.data.element.validation_name;
-      this.currentValidationId = this.data.element.validation_id;
-    }
 
     if (!this.tableDefinition) {
       this.databaseService.getTableDefinition(this.data.tableId).toPromise().then((values => {
@@ -131,7 +103,6 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.logger.debug(this.logTag, "Destroying observables.. ")
-    if (this.validationUserNameObservable) { this.validationUserNameObservable.unsubscribe(); }
     if (this.statusChangeObservable) { this.statusChangeObservable.unsubscribe(); }
   }
 
@@ -165,10 +136,7 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
 
       // special columns needs something else
       if (column.type.special) {
-        if (column.name === 'validated_by') {
-          // validated_by field needs that the inserted id exists into database
-          asyncValidators.push(this.validationUserAsyncValidator());
-        }
+
       }
 
       // group[column.name] = new FormControl(currentValue || '',
@@ -189,10 +157,8 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
       disablingControls: this.fb.group(disablingControls)
     });
 
-    if (!this.currentValidationUser) {
-      this.formGroup.get(['disablingControls']).disable();
-    }
     this.cdr.detectChanges();
+    this.enableFormIfValid(this.formGroup.status);
   }
 
   onInsert() {
@@ -256,44 +222,11 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
    }*/
 
   enableFormIfValid(status: string) {
-    this.searchUserPending = status === 'PENDING';
-
     if (status === 'INVALID') {
-      this.disableForm();
+      this.formGroup.get('disablingControls').disable();
     } else if (status === 'VALID') {
-      this.enableForm();
+      this.formGroup.get('disablingControls').enable();
     }
-  }
-
-  private enableForm() {
-    const form = this.formGroup.get('disablingControls');
-    const formValue = Number.parseInt(this.formGroup.get('validated_by').value);
-
-    if (formValue !== this.currentValidationId) {
-      if (this.validationUserNameObservable) {
-        this.validationUserNameObservable.unsubscribe();
-      }
-      this.currentValidationId = formValue;
-      this.validationUserNameObservable = this.databaseService.getValidationUserName(this.currentValidationId).subscribe(
-        (value => {
-            if (value) {
-              this.currentValidationUser = value;
-              form.enable();
-              this.cdr.detectChanges();
-            }
-          }
-        )
-      );
-    }
-  }
-
-  disableForm(): void {
-    const form = this.formGroup.get('disablingControls');
-
-    if (!this.validationUserNameObservable?.closed) { this.validationUserNameObservable?.unsubscribe(); }
-    this.currentValidationId = null;
-    this.currentValidationUser = null;
-    form.disable();
   }
 
 }
