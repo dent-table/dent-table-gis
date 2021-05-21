@@ -1139,8 +1139,6 @@ function getQuestionnairesBy({tableId, questionnaireId}) {
     }
   });
 
-  console.log(results);
-
   // if a questionnaire applies to multiple tables results above will have the same questionnaire multiple times,
   // different only on table_id field.
   // So, the operations below returns the distinct questionnaires, with grouped table ids
@@ -1154,7 +1152,7 @@ function getQuestionnairesBy({tableId, questionnaireId}) {
     })
     .value();
 
-  return results;
+  return results.length === 1 ? results[0] : results;
 }
 
 /**
@@ -1218,7 +1216,7 @@ function saveQuestionnaireAnswers(answers) {
     questionnaire_ref: answers.questionnaire_ref,
     slot_number: answers.slot_number,
     name: answers.name,
-    date: answers.date,
+    date: answers.date || moment().toISOString(),
     note: answers.note,
     answers: JSON.stringify(answersObj),
     validations: JSON.stringify(answers.validations)
@@ -1257,7 +1255,7 @@ function getQuestionnaireAnswersBy(params) {
   let stmt = db.prepare(query);
   let results = stmt.all(params);
 
-  results = results.map( (result) => {
+  results = results.map((result) => {
       return {
         id: result.id,
         table_id: result.table_id,
@@ -1273,6 +1271,27 @@ function getQuestionnaireAnswersBy(params) {
   );
 
   return _.groupBy(results, 'questionnaire_ref');
+}
+
+function getQuestionnaireAnswerById(answerId) {
+  checkRequiredParameters(answerId);
+
+  let query = "SELECT * FROM questionnaire_answers WHERE id=?";
+
+  let stmt = db.prepare(query);
+  let result = stmt.get(answerId);
+
+  return {
+    id: result.id,
+    table_id: result.table_id,
+    questionnaire_ref: result.questionnaire_ref,
+    slot_number: result.slot_number,
+    name: result.name,
+    date: result.date,
+    note: result.note,
+    answers: JSON.parse(result.answers),
+    validations: JSON.parse(result.validations)
+  }
 }
 
 /**
@@ -1422,6 +1441,8 @@ ipc.on('database-op', (event, values) => {
         result = getQuestionnairesBy(parameters); break;
       case 'questionnaire-get-answers':
         result = getQuestionnaireAnswersBy(parameters); break;
+      case 'questionnaire-get-answer-by-id':
+        result = getQuestionnaireAnswerById(parameters.questionnaireId); break;
       case 'questionnaire-save-answers':
         result = saveQuestionnaireAnswersTransaction(parameters); break;
     }

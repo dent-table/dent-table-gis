@@ -18,8 +18,7 @@ import {
 } from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import * as moment from 'moment';
-import {Utils} from '../../commons/Utils';
-import * as _ from 'lodash-es';
+import {_typeof, controlsPaths, getSpecialCases, specialCase} from '../../commons/Utils';
 import {LoggerService} from '../../providers/logger.service';
 import {Observable, Subscription, timer} from "rxjs";
 import {map, switchMap, tap} from "rxjs/operators";
