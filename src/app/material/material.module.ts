@@ -20,11 +20,15 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {FlexLayoutModule} from '@angular/flex-layout';
-import {MAT_MOMENT_DATE_FORMATS, MatMomentDateModule, MomentDateAdapter} from '@angular/material-moment-adapter';
+// import {MAT_MOMENT_DATE_FORMATS, MatMomentDateModule, MomentDateAdapter} from '@angular/material-moment-adapter';
 import {NgMatSearchBarModule} from 'ng-mat-search-bar';
 import {MatExpansionModule} from '@angular/material/expansion';
 import {MatListModule} from '@angular/material/list';
 import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import it from 'date-fns/esm/locale/it'
+// import {NgxMatDateFnsDateModule, NGX_MAT_DATEFNS_LOCALES} from 'ngx-mat-datefns-date-adapter';
+import {NgxMatDateFnsDateModule} from '../ngx-date-fns-date/ngx-date-fns-date.module';
+import {NGX_MAT_DATEFNS_LOCALES} from '../ngx-date-fns-date/ngx-mat-datefns-locales';
 import { ValidationInputComponent } from './components/validation-input/validation-input.component';
 import {ReactiveFormsModule} from "@angular/forms";
 
@@ -32,20 +36,21 @@ import {ReactiveFormsModule} from "@angular/forms";
   declarations: [ValidationInputComponent],
     imports: [
         CommonModule, BrowserAnimationsModule, MatButtonModule, MatCheckboxModule, MatTooltipModule, MatFormFieldModule, MatInputModule,
-        FlexLayoutModule, MatPaginatorModule, MatIconModule, MatToolbarModule, MatCardModule, MatDatepickerModule, MatMomentDateModule,
+        FlexLayoutModule, MatPaginatorModule, MatIconModule, MatToolbarModule, MatCardModule, MatDatepickerModule, NgxMatDateFnsDateModule,
         MatRippleModule, NgMatSearchBarModule, MatSnackBarModule, MatProgressSpinnerModule, MatTabsModule, MatExpansionModule, MatListModule,
         MatButtonToggleModule, ReactiveFormsModule
     ],
   exports: [
     BrowserAnimationsModule, MatButtonModule, MatCheckboxModule, MatTableModule, MatTooltipModule, MatFormFieldModule, MatInputModule,
-    FlexLayoutModule, MatPaginatorModule, MatIconModule, MatToolbarModule, MatCardModule, MatDatepickerModule, MatMomentDateModule,
+    FlexLayoutModule, MatPaginatorModule, MatIconModule, MatToolbarModule, MatCardModule, MatDatepickerModule, NgxMatDateFnsDateModule,
     MatRippleModule, NgMatSearchBarModule, MatSnackBarModule, MatProgressSpinnerModule, MatTabsModule, MatExpansionModule, MatListModule,
     MatButtonToggleModule,
     ValidationInputComponent
   ],
   providers: [
-    {provide: DateAdapter, useClass: MomentDateAdapter, deps: [MAT_DATE_LOCALE]},
-    {provide: MAT_DATE_FORMATS, useValue: MAT_MOMENT_DATE_FORMATS},
+    // {provide: DateAdapter, useClass: MomentDateAdapter, deps: [MAT_DATE_LOCALE]},
+    // {provide: MAT_DATE_FORMATS, useValue: MAT_MOMENT_DATE_FORMATS},
+    {provide: NGX_MAT_DATEFNS_LOCALES, useValue: [it]},
     {provide: MAT_DATE_LOCALE, useValue: navigator.language}
   ]
 })
