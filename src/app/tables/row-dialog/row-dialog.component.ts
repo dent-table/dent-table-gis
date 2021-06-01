@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import {DatabaseService} from '../../providers/database.service';
 import {TableDefinition} from '../../model/model';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {AbstractControl, FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {_typeof, controlsPaths, getSpecialCases, specialCase} from '../../commons/Utils';
 import {LoggerService} from '../../providers/logger.service';
@@ -16,6 +16,7 @@ import parse from 'date-fns/parse';
 import {Observable, Subscription, timer} from "rxjs";
 import {map, switchMap, tap} from "rxjs/operators";
 import {ShowOnDirtyErrorStateMatcher} from "@angular/material/core";
+import merge from "lodash-es/merge";
 
 export interface DialogData {
   tableId: any;
@@ -156,7 +157,7 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
   onInsert() {
     if (this.formGroup.valid) {
       const values = this.formGroup.value;
-      _.merge(values, values.disablingControls);
+      merge(values, values.disablingControls);
       delete values.disablingControls;
 
       this.databaseService.insertRow(this.data.tableId, values).toPromise().then((result) => {
