@@ -76,6 +76,7 @@
     "CANCEL": "Annulla",
     "ADD": "Aggiungi",
     "REMOVE": "Rimuovi",
+    "NEW": "Nuovo",
     "SAVE": "Salva"
   },
   "SUCCESSES": {
@@ -84,6 +85,7 @@
   },
   "ERRORS": {
     "GENERIC": "Si è verificato un errore",
+    "GENERIC2": "Impossibile completare l'operazione",
     "NOT_NULL_COLUMN": "Il campo \"{{column}}\" non può essere vuoto"
   }
 }
