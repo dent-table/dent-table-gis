@@ -8,16 +8,16 @@
 /release
 main.js
 src/**/*.js
-!/src/data/data_entry.js
 !src/karma.conf.js
 *.js.map
 
 # dependencies
 /node_modules
+/app/node_modules
 /old
 
 # IDEs and editors
-/.idea
+.idea
 .project
 .classpath
 .c9/

@@ -1,4 +1,5 @@
-require('@electron/remote/main').initialize()
+/*
+require('@electron/remote/main').initialize();
 import {app, BrowserWindow, ipcMain, nativeImage, screen} from 'electron';
 import * as path from 'path';
 import * as url from 'url';
@@ -142,7 +143,12 @@ function createDatabaseWindow() {
     require('electron-reload')(__dirname, {
       electron: require(`${__dirname}/node_modules/electron`)
     });
-    databaseWin.loadURL('http://localhost:4200/data/index.html');
+    // databaseWin.loadURL('http://localhost:4200/data/index.html');
+    databaseWin.loadURL(url.format({
+      pathname: path.join(__dirname, 'app/data/index.html'),
+      protocol: 'file:',
+      slashes: true
+    }));
   } else {
     logger.info('Loading ' + path.join(__dirname, 'dist/data/index.html'));
     databaseWin.loadURL(url.format({
@@ -185,7 +191,7 @@ function createWindows() {
 }
 
 try {
-  /*  const shouldQuit = !app.requestSingleInstanceLock();
+  /!*  const shouldQuit = !app.requestSingleInstanceLock();
 
     app.on('second-instance', function (argv, cwd) {
       if (mainWindow) {
@@ -198,7 +204,7 @@ try {
     if (shouldQuit) {
       app.quit();
       // return;
-    }*/
+    }*!/
 
   if (!fs.existsSync(dataPath)) {
     fs.mkdirSync(dataPath);
@@ -248,3 +254,4 @@ try {
 
   logger.error(e);
 }
+*/

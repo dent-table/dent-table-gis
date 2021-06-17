@@ -1,11 +1,4 @@
-import {
-  AfterViewInit,
-  ChangeDetectorRef,
-  Component,
-  Inject,
-  OnDestroy,
-  OnInit
-} from '@angular/core';
+import {AfterViewInit, ChangeDetectorRef, Component, Inject, OnInit, OnDestroy} from '@angular/core';
 import {DatabaseService} from '../../providers/database.service';
 import {TableDefinition} from '../../model/model';
 import {AbstractControl, FormBuilder, FormGroup, Validators} from '@angular/forms';
@@ -64,7 +57,7 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.tableDefinition = this.data.tableDefinition;
 
     if (!this.tableDefinition) {
@@ -101,7 +94,7 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
 
   typeOf = _typeof;
 
-  createFormGroup() {
+  createFormGroup(): void {
     const disablingControls = {}; // controls in this group will be disabled if validated_by field is not valid
 
     let elementSlotNumber = this.data.element ? this.data.element['slot_number'] : '';
@@ -128,9 +121,10 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
       // special columns needs something else
-      if (column.type.special) {
-
-      }
+      // uncomment this block when will be necessary
+      // if (column.type.special) {
+      //
+      // }
 
       // group[column.name] = new FormControl(currentValue || '',
       //   {validators: validators, asyncValidators: asyncValidators, updateOn: "change"});
@@ -154,7 +148,7 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
     this.enableFormIfValid(this.formGroup.status);
   }
 
-  onInsert() {
+  onInsert(): void {
     if (this.formGroup.valid) {
       const values = this.formGroup.value;
       merge(values, values.disablingControls);
@@ -169,12 +163,12 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  onUpdate() {
+  onUpdate(): void {
     const toUpdate = {};
     let someDirty = false;
     if (this.formGroup.valid && this.formGroup.dirty) {
       const controlPaths = controlsPaths(this.formGroup);
-      for (let controlPath of controlPaths) {
+      for (const controlPath of controlPaths) {
         if (this.formGroup.get(controlPath).dirty && this.formGroup.get(controlPath).valid) {
           someDirty = true;
           // control name is the last element of the path
@@ -193,7 +187,7 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  onSubmit() {
+  onSubmit(): void {
     switch (this.dialogType) {
       case 'insert': this.onInsert(); break;
       case 'update': this.onUpdate(); break;

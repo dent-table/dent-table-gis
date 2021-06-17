@@ -9,6 +9,8 @@ import {LoggerService} from '../../providers/logger.service';
 import {TranslateService} from '@ngx-translate/core';
 import {ConfirmDialogComponent} from '../confirm-dialog/confirm-dialog.component';
 import {QuestionnaireComponent} from '../questionnaire/questionnaire.component';
+import {updateVerifiedColumn} from '../../tables/common/TableUtils';
+import {TableRow} from '../../model/model';
 
 @Component({
   selector: 'app-home',
@@ -34,18 +36,21 @@ export class HomeComponent implements OnInit {
   ) {
   }
 
-  ngOnInit() {}
+  ngOnInit(): void {}
 
 
-  cellClicked(tableId: number, event: CellClickEvent) {
+  cellClicked(tableId: number, event: CellClickEvent): void {
     const el = event.element;
     const colName = event.columnName;
 
     if (event.columnName === 'verified') {
-      const value = el[colName] === 0 ? 1 : 0;
-      this.databaseService.updateRow(el.table_id, el.table_ref, {verified: value}).subscribe((result) => {
-        this.logger.debug(this.logTag, result);
-        this.reloadTable(tableId);
+      this.logger.info(this.logTag, 'Updating verified column...');
+      updateVerifiedColumn(el, this.databaseService).subscribe({
+        next: value => {
+          this.logger.info(this.logTag, `Update result`, value);
+          this.reloadTable(tableId);
+        },
+        error: error => this.logger.error(this.logTag, 'Update error', error)
       });
     } else if (colName === 'delete_row') {
       this.zone.run(() => {
@@ -64,7 +69,7 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  openQuestionnaireDialog(tableId: number, element) {
+  openQuestionnaireDialog(tableId: number, element: TableRow): void {
     this.zone.run(() => {
       this.dialog.open(QuestionnaireComponent, {
         data: {tableId: tableId, element: element},
@@ -73,7 +78,7 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  openRowDialog(tableId: number, element?: any) {
+  openRowDialog(tableId: number, element?: any): void {
     let dialogRef;
 
     // component' onInit not fired without Zone
@@ -92,7 +97,7 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  deleteRow(tableId: number, el: any) {
+  deleteRow(tableId: number, el: any): void {
     this.logger.debug(this.logTag, 'deleting', el);
     let snackbarText, snackbarDuration, snackbarActionText, snackbarActionCallback, snackbarRef;
 
@@ -107,7 +112,7 @@ export class HomeComponent implements OnInit {
           this.logger.info(this.logTag, 'Delete undo requested');
           result['slot_number'] = el.slot_number;
           this.logger.debug(result);
-          this.databaseService.insertRow(tableId, result).subscribe((result2) => {
+          this.databaseService.insertRow(tableId, result).subscribe(() => {
             this.logger.info(this.logTag, 'Delete undo success');
             this.reloadTable(tableId);
           }, (error2) => {
@@ -132,7 +137,7 @@ export class HomeComponent implements OnInit {
       });
   }
 
-  reloadTable(tableId: number) {
+  reloadTable(tableId: number): void {
     switch (tableId) {
       case 1: this.table1.reload(); break;
       case 2: this.table2.reload(); break;

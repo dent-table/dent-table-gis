@@ -3,21 +3,34 @@ import {Injectable} from '@angular/core';
 // If you import a module but never use any of the imported values other than as TypeScript types,
 // the resulting javascript file will look as if you never imported the module at all.
 import {ipcRenderer, IpcRendererEvent, remote, webFrame} from 'electron';
+
+// The one in the next line should be the right way to import Electron Remote (removing remote from
+// the import above this comment). But there is an issue that prevent compiling with this type of import
+// (https://github.com/electron/remote/issues/60)
+// This error should be fixed in 1.1.1 release of @electron/remote (https://github.com/electron/remote/releases/tag/v1.1.1)
+// but is not released yet on npm. So:
+// TODO: when released, update @electron/remote and fix the import
+// import * as remote from '@electron/remote';
 import * as childProcess from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class ElectronService {
 
-  ipcRenderer: typeof ipcRenderer;
-  webFrame: typeof webFrame;
-  remote: typeof remote;
-  childProcess: typeof childProcess;
-  fs: typeof fs;
+  private ipcRenderer: typeof ipcRenderer;
+  private webFrame: typeof webFrame;
+  private childProcess: typeof childProcess;
+  private fs: typeof fs;
 
+  remote: typeof remote;
   databaseWebContentId: number;
-  appVersion = require('../../../package.json').version;
+
+  get appVersion(): string {
+    return require('../../../package.json').version;
+  }
 
   constructor() {
     // Conditional imports
@@ -33,9 +46,9 @@ export class ElectronService {
     }
   }
 
-  isElectron = () => {
+  isElectron = (): string => {
     return window && window.process && window.process.type;
-  }
+  };
 
   getAppPath(append: string): string {
     if (append) {
@@ -51,42 +64,39 @@ export class ElectronService {
     return this.getAppPath('logs');
   }
 
-  ipcSendTo(webContentId: number, channel: string, data: any) {
+  ipcSendTo(webContentId: number, channel: string, data: any): void {
     this.ipcRenderer.sendTo(webContentId, channel, data);
   }
 
-  ipcSend(channel: string, data?: any) {
+  ipcSend(channel: string, data?: any): void {
     this.ipcRenderer.send(channel, data);
   }
 
-  ipcOnce(channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) {
+  ipcOnce(channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void): void {
     this.ipcRenderer.once(channel, listener);
   }
 
-  ipcOn(channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) {
-    // if (channel.startsWitx h('table-get-all-')) {
-    //   console.log('ipc on: Registering channel ', channel);
-    // }
+  ipcOn(channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void): void {
     this.ipcRenderer.on(channel, listener);
   }
 
-  ipcRemoveListener(channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) {
+  ipcRemoveListener(channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void): void {
     this.ipcRenderer.removeListener(channel, listener);
   }
 
-  ipcRemoveAllListeners(channel: string) {
+  ipcRemoveAllListeners(channel: string): void {
     this.ipcRenderer.removeAllListeners(channel);
   }
 
-  close() {
+  close(): void {
     this.remote.getCurrentWindow().close();
   }
 
-  minimize() {
+  minimize(): void {
     this.remote.getCurrentWindow().minimize();
   }
 
-  toggleMaximize() {
+  toggleMaximize(): void {
     if (!this.remote.getCurrentWindow().isMaximized()) {
       this.remote.getCurrentWindow().maximize();
     } else {
@@ -94,7 +104,7 @@ export class ElectronService {
     }
   }
 
-  toggleFullscreen() {
+  toggleFullscreen(): void {
     const isFullscreen = this.remote.getCurrentWindow().isFullScreen();
     this.remote.getCurrentWindow().setFullScreen(!isFullscreen);
     this.remote.getCurrentWindow().setAlwaysOnTop(!isFullscreen);

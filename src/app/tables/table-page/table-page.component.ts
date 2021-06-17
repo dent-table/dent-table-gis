@@ -10,6 +10,8 @@ import {LoggerService} from '../../providers/logger.service';
 import {TranslateService} from '@ngx-translate/core';
 import {QuestionnaireComponent} from '../../components/questionnaire/questionnaire.component';
 import {openSnackbar} from '../../commons/Utils';
+import {TableRow} from '../../model/model';
+import {updateVerifiedColumn} from '../common/TableUtils';
 
 @Component({
   selector: 'app-table-page',
@@ -35,26 +37,23 @@ export class TablePageComponent implements OnInit {
     private translateService: TranslateService
   ) { }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.tableId = Number.parseInt(this.activatedRoute.snapshot.params['id'], 10);
     this.orderColumn = this.tableId === 3 ? 'date_out' : 'date';
     this.warnDateColumnName = this.orderColumn;
   }
 
-  cellClicked(event: CellClickEvent) {
+  cellClicked(event: CellClickEvent): void {
     const el = event.element;
-    const colName = event.columnName;
 
     if (event.columnName === 'verified') {
-      this.logger.info(this.logTag, 'Updating verified column...');
-      const value = el[colName] === 0 ? 1 : 0;
-      this.databaseService.updateRow(el.table_id, el.table_ref, {verified: value}).subscribe((result) => {
-          this.logger.info(this.logTag, `Update result`, result);
+      updateVerifiedColumn(el, this.databaseService).subscribe({
+        next: value => {
+          this.logger.info(this.logTag, `Update result`, value);
           this.tableWidget.reload();
         },
-        (error1) => {
-          this.logger.error(this.logTag, 'Update error', error1);
-        });
+        error: error => this.logger.error(this.logTag, 'Update error', error)
+      });
     } else if (event.columnName === 'delete_row') {
       this.logger.info(this.logTag, 'Opening delete row dialog...');
       this.zone.run(() => {
@@ -77,7 +76,7 @@ export class TablePageComponent implements OnInit {
     }
   }
 
-  openQuestionnaireDialog(tableId: number, element) {
+  openQuestionnaireDialog(tableId: number, element: TableRow): void {
     this.zone.run(() => {
       this.dialog.open(QuestionnaireComponent, {
         data: {tableId: tableId, element: element},
@@ -86,7 +85,7 @@ export class TablePageComponent implements OnInit {
     });
   }
 
-  openRowDialog(el?: any) {
+  openRowDialog(el?: TableRow): void {
     let dialogRef;
 
     // component' onInit not fired without Zone
@@ -105,7 +104,7 @@ export class TablePageComponent implements OnInit {
     });
   }
 
-  deleteRow(el: any) {
+  deleteRow(el: TableRow): void {
     this.logger.debug(this.logTag, 'deleting', el);
     let snackbarText, snackbarDuration, snackbarActionText, snackbarActionCallback, snackbarRef;
 
@@ -118,7 +117,7 @@ export class TablePageComponent implements OnInit {
           this.logger.info(this.logTag, 'Delete undo requested');
           this.logger.info(this.logTag, 'Element to reinsert: ', result);
           result['slot_number'] = el.slot_number;
-          this.databaseService.insertRow(this.tableId, result).subscribe((result2) => {
+          this.databaseService.insertRow(this.tableId, result).subscribe(() => {
             this.logger.info(this.logTag, 'Delete undo success');
             this.tableWidget.reload();
           }, (error2) => {

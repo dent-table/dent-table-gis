@@ -15,7 +15,9 @@ import setDay from 'date-fns/setDay';
 import setMonth from 'date-fns/setMonth';
 import toDate from 'date-fns/toDate';
 import parseJSON from 'date-fns/parseJSON';
-import { zonedTimeToUtc } from 'date-fns-tz/esm';
+
+
+import { zonedTimeToUtc } from 'date-fns-tz';
 import enUS from 'date-fns/esm/locale/en-US';
 import { NGX_MAT_DATEFNS_LOCALES } from './ngx-mat-datefns-locales';
 
@@ -49,7 +51,9 @@ function range(start: number, end: number): number[] {
 
 const UTC_TIMEZONE = 'UTC';
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class NgxDateFnsDateAdapter extends DateAdapter<Date> {
   private _dateFnsLocale: Locale;
   private getLocale = (localeCodeOrLocale: string | Locale): Locale => {
@@ -63,7 +67,8 @@ export class NgxDateFnsDateAdapter extends DateAdapter<Date> {
       (item) => item.code === localeCodeOrLocale
     );
     if (!locale) {
-      throw new Error(`locale '${localeCodeOrLocale}' does not exist`);
+      const locStr: string = typeof localeCodeOrLocale === 'string' ? localeCodeOrLocale : localeCodeOrLocale.code;
+      throw new Error(`locale '${locStr}' does not exist`);
     }
     return locale;
   };
@@ -84,7 +89,7 @@ export class NgxDateFnsDateAdapter extends DateAdapter<Date> {
     }
   }
 
-  setLocale(locale: string | Locale) {
+  setLocale(locale: string | Locale): void {
     if (!locale) {
       throw new Error(
         'setLocale should be called with the string locale code or date-fns Locale object'
@@ -144,7 +149,7 @@ export class NgxDateFnsDateAdapter extends DateAdapter<Date> {
         return toDate(value);
       }
       if (value instanceof Date) {
-        return this.clone(value as Date);
+        return this.clone(value);
       }
       return null;
     }
@@ -177,8 +182,8 @@ export class NgxDateFnsDateAdapter extends DateAdapter<Date> {
     const formatStr = map[style];
     const date = new Date();
 
-    return range(0, 6).map((month) =>
-      format(setDay(date, month), formatStr, {
+    return range(0, 6).map((day) =>
+      format(setDay(date, day), formatStr, {
         locale: this._dateFnsLocale,
       })
     );
@@ -252,7 +257,7 @@ export class NgxDateFnsDateAdapter extends DateAdapter<Date> {
         return toDate(value);
       }
       if (value instanceof Date) {
-        return this.clone(value as Date);
+        return this.clone(value);
       }
       return null;
     }
