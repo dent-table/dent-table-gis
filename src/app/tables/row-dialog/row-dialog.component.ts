@@ -61,10 +61,12 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
     this.tableDefinition = this.data.tableDefinition;
 
     if (!this.tableDefinition) {
-      this.databaseService.getTableDefinition(this.data.tableId).toPromise().then((values => {
-        this.tableDefinition = values;
-        this.createFormGroup();
-      }));
+      this.databaseService.getTableDefinition(this.data.tableId).subscribe({
+        next: (values) => {
+          this.tableDefinition = values;
+          this.createFormGroup();
+        }
+      });
     } else {
       this.createFormGroup();
     }
@@ -81,8 +83,10 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (!this.data.availableSlots) {
-      this.databaseService.getAvailableSlots(this.data.tableId).toPromise().then((values) => {
-        this.availableSlots = this.availableSlots.concat(values);
+      this.databaseService.getAvailableSlots(this.data.tableId).subscribe({
+        next: (values) => {
+          this.availableSlots = this.availableSlots.concat(values);
+        }
       });
     }
   }
@@ -154,11 +158,14 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
       merge(values, values.disablingControls);
       delete values.disablingControls;
 
-      this.databaseService.insertRow(this.data.tableId, values).toPromise().then((result) => {
-        this.dialogRef.close(result);
-      }).catch((error) => {
-        this.logger.error(this.logTag, error);
-        this.error = error;
+      this.databaseService.insertRow(this.data.tableId, values).subscribe({
+        next: (result) => {
+          this.dialogRef.close(result);
+        },
+        error: (error) => {
+          this.logger.error(this.logTag, error);
+          this.error = error;
+        }
       });
     }
   }
@@ -177,11 +184,14 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
       if (someDirty) {
-        this.databaseService.updateRow(this.data.tableId, this.data.element.table_ref, toUpdate).toPromise().then((result) => {
-          this.dialogRef.close(result);
-        }).catch((error) => {
-          this.logger.error(this.logTag, error);
-          this.error = error;
+        this.databaseService.updateRow(this.data.tableId, this.data.element.table_ref, toUpdate).subscribe({
+          next: (result) => {
+            this.dialogRef.close(result);
+          },
+          error: (error) => {
+            this.logger.error(this.logTag, error);
+            this.error = error;
+          }
         });
       }
     }
