@@ -46,7 +46,7 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
     private fb: FormBuilder,
     private logger: LoggerService
   ) {
-    if ('string' === typeof data.tableId) {
+    if (typeof data.tableId === "string") {
       this.data.tableId = Number.parseInt(this.data.tableId, 10);
     }
 
@@ -148,7 +148,7 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
       disablingControls: this.fb.group(disablingControls)
     });
 
-    this.cdr.detectChanges();
+    // this.cdr.detectChanges();
     this.enableFormIfValid(this.formGroup.status);
   }
 
