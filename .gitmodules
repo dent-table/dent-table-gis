@@ -1,4 +1,4 @@
 [submodule "data"]
 	path = data
-	url = https://github.com/dent-table/dent-table-sqlite.git
+	url = https://github.com/dent-table/dent-table-gis-sqlite.git
 	branch = master
