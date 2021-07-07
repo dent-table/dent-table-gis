@@ -1,25 +1,3 @@
-export class ToDo {
-  constructor(
-    public slotNumber: number,
-    public tableRefId: number,
-    public tableId: number,
-    public name: string,
-    public type: string,
-    public date: number,
-  ) { }
-}
-
-export class ToDeliver {
-  constructor(
-    public slotNumber: number,
-    public tableRefId: number,
-    public tableId: number,
-    public name: string,
-    public type: string,
-    public date: number,
-  ) { }
-}
-
 /** Represent a generic table row obtained from the database */
 export interface TableRow {
   /** Slot number from table tables_slots */
@@ -33,7 +11,7 @@ export interface TableRow {
 }
 
 export interface ColumnTypeDefinition {
-  name: string;
+  name: "string" | "text" | "date" | "boolean" | "select";
   special: boolean;
   options?: any; // options for option type
 }

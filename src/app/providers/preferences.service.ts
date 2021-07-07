@@ -7,15 +7,20 @@ import * as path from 'path';
   providedIn: 'root'
 })
 export class PreferencesService {
+  // TODO(fork): change table ids into "src/assets/preferences.json" (SEE GUIDELINES)
 
   public static CATEGORIES = {
-    login: 'login'
+    login: 'login',
+    tables: 'tables',
   };
 
   public static PREFERENCES_KEYS = {
     login: {
       rememberUser: 'rememberUser',
       username: 'username'
+    },
+    tables: {
+      order_columns: "order_columns"
     }
   };
 
@@ -31,7 +36,7 @@ export class PreferencesService {
     this.preferences = JSON.parse(buffer);
   }
 
-  get(category: string, name: string, defaultValue?: any): string {
+  get(category: string, name: string, defaultValue?: any): any {
     if (this.preferences[category][name] !== undefined || this.preferences[category][name] !== null ) {
       return this.preferences[category][name];
     } else if (defaultValue !== undefined || defaultValue !== null) {
