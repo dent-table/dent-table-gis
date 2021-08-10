@@ -1,6 +1,6 @@
 import {AfterViewInit, ChangeDetectorRef, Component, Inject, OnInit, OnDestroy} from '@angular/core';
 import {DatabaseService} from '../../providers/database.service';
-import {TableDefinition} from '../../model/model';
+import {ColumnDefinition, TableDefinition} from '../../model/model';
 import {AbstractControl, FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {_typeof, controlsPaths, getSpecialCases, specialCase} from '../../commons/Utils';
@@ -226,4 +226,9 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  getDropdownItemStyle(column: ColumnDefinition, opt: { name: string, value: any }): any {
+    if (column.name === "text_color") return {backgroundColor: opt.value, color: 'whitesmoke'};
+
+    return {};
+  }
 }
