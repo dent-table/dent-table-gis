@@ -31,6 +31,7 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
   formGroup: FormGroup;
 
   error;
+  hasValidatedByField: boolean;
 
   dialogType: string;
   specialCases;
@@ -137,19 +138,28 @@ export class RowDialogComponent implements OnInit, AfterViewInit, OnDestroy {
         {validators: validators, asyncValidators: asyncValidators, updateOn: "change"});
     }
 
-    // we have to remove validated_by field from the control group
-    const validatedByControl: AbstractControl = disablingControls['validated_by'];
-    delete disablingControls['validated_by'];
+    this.hasValidatedByField = Object.keys(disablingControls).includes("validated_by");
+    console.log(this.hasValidatedByField);
 
-    this.statusChangeObservable = validatedByControl.statusChanges.subscribe(status => this.enableFormIfValid(status));
+    if (this.hasValidatedByField) {
+      // we have to remove validated_by field from the control group
+      const validatedByControl: AbstractControl = disablingControls['validated_by'];
+      delete disablingControls['validated_by'];
 
-    this.formGroup = this.fb.group({
-      validated_by: validatedByControl,
-      disablingControls: this.fb.group(disablingControls)
-    });
+      this.statusChangeObservable = validatedByControl.statusChanges.subscribe(status => this.enableFormIfValid(status));
 
-    // this.cdr.detectChanges();
-    this.enableFormIfValid(this.formGroup.status);
+      this.formGroup = this.fb.group({
+        validated_by: validatedByControl,
+        disablingControls: this.fb.group(disablingControls)
+      });
+
+      // this.cdr.detectChanges();
+      this.enableFormIfValid(this.formGroup.status);
+    } else {
+      this.formGroup = this.fb.group({
+        disablingControls: this.fb.group(disablingControls)
+      });
+    }
   }
 
   onInsert(): void {

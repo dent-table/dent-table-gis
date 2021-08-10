@@ -1,5 +1,5 @@
 <form *ngIf="formGroup" (ngSubmit)="onSubmit()" [formGroup]="formGroup">
-  <div class="sticky">
+  <div class="sticky" *ngIf="hasValidatedByField">
     <div class="input-row">
       <mat-form-field class="mat-small" appearance="outline">
         <mat-label>{{ 'TABLES.COLUMNS.validated_by'| translate }}</mat-label>
