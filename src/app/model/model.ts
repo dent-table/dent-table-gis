@@ -11,7 +11,7 @@ export interface TableRow {
 }
 
 export interface ColumnTypeDefinition {
-  name: "string" | "text" | "date" | "boolean" | "select";
+  name: "string" | "text" | "date" | "boolean" | "select" | "validation";
   special: boolean;
   options?: { name: string, value: any }[]; // options for select type
   disable_default?: boolean; // only for select type

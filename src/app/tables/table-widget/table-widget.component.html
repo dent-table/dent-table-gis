@@ -46,10 +46,11 @@
               </span>
               <ng-template #defaultDate ><span>{{row[column.name] | date: 'dd/MM' }}</span></ng-template>
             </span>
-              <span *ngSwitchCase="'validation'">
-                {{row[column.name + '_name']}}
-              </span>
-              <span *ngSwitchDefault class="cell-text" >{{row[column.name]}}</span>
+            <!-- CASE VALIDATION -->
+            <span *ngSwitchCase="'validation'">
+              {{row[column.foreign.prefix + '_name']}}
+            </span>
+            <span *ngSwitchDefault class="cell-text" >{{row[column.name]}}</span>
             </div>
             <!-- END OF COLUMN SWITCH BY COLUMN.TYPE-->
           </mat-cell>

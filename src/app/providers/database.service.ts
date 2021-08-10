@@ -232,7 +232,7 @@ export class DatabaseService {
         if (data.result == 'error') {
           subscriber.error(data.message);
         } else {
-          subscriber.next(data.response.validation_name);
+          subscriber.next(data.response.name);
           subscriber.complete();
         }
       });
