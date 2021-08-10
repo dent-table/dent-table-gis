@@ -268,7 +268,8 @@ export class TableWidgetComponent implements OnInit, AfterViewInit, AfterContent
 
   isDragAllowed(row: TableRow): (any) => boolean {
     return (/*dragData: any*/) => {
-      return row.date !== null;
+      // for this fork is allowed to have empty "date" field, so we use the "name" field to check if a row is empty
+      return row.name !== null;
     };
   }
 
