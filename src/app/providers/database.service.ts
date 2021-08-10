@@ -226,7 +226,7 @@ export class DatabaseService {
   getValidationUserName(validation_userid: number): Observable<string> {
     const params = {userid: validation_userid};
 
-    let obs = new Observable<string>((subscriber => {
+    const obs = new Observable<string>((subscriber => {
       const returnChannel = this.sendToDatabase('validation-get-user-name', params, true);
       this.electronService.ipcOnce(returnChannel, (event, data) => {
         if (data.result == 'error') {
