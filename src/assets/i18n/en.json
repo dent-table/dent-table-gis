@@ -30,6 +30,18 @@
           "yellow": "Giallo",
           "orange": "Arancione",
           "deep_orange": "Arancione scuro"
+        },
+        "impronta": {
+          "analogic": "Analogica",
+          "digital": "Digitale"
+        },
+        "foto_sino": {
+          "yes": "Si",
+          "no": "No"
+        },
+        "foto_inviate": {
+          "sent": "Inviate",
+          "not_sent": "Non inviate"
         }
       }
     },
@@ -51,21 +63,18 @@
   },
   "TABLES": {
     "NAMES": {
-      "to_do": "Da fare",
-      "to_deliver": "Da consegnare",
-      "plan_chir": "Pian. chirurgica",
-      "outgoing": "In uscita",
-      "plan_orto": "Pian. ortoestetica"
+      "outgoing": "Uscita",
+      "incoming": "Entrata",
+      "checklist": "Checklist"
     },
     "COLUMNS": {
       "slot_number": "Slot",
       "name":  "Nome",
       "note": "Note",
-      "type": "Tipo",
-      "lab":  "Lab",
       "date": "Data",
-      "date_out":  "Data consegna",
-      "verified": "Verificato",
+      "foto_sino": "Foto?",
+      "foto_inviate": "Foto inviate?",
+      "impronta": "Impronta",
       "validated_by": "Validato",
       "validated_out": "Validato (uscita)",
       "text_color": "Colore"

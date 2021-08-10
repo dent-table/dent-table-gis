@@ -7,16 +7,12 @@
     "colors": {
       "1": "red",
       "2": "blue",
-      "3": "deep-purple",
-      "4": "teal",
-      "5": "pink"
+      "3": "deep-purple"
     },
     "order_columns": {
       "1": "date",
       "2": "date",
-      "3": "date_out",
-      "4": "date",
-      "5": "date"
+      "3": null
     }
   },
   "general": {
